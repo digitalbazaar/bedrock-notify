@@ -1,0 +1,31 @@
+{
+  "name": "bedrock-module-template-http-test",
+  "version": "0.0.1-0",
+  "private": true,
+  "scripts": {
+    "test": "node --preserve-symlinks test.js test",
+    "coverage": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary npm test",
+    "coverage-ci": "cross-env NODE_ENV=test nyc --reporter=lcovonly npm test",
+    "coverage-report": "nyc report"
+  },
+  "dependencies": {
+    "bedrock": "^4.1.1",
+    "bedrock-express": "^3.2.0",
+    "bedrock-https-agent": "^2.0.0",
+    "bedrock-module-template-http": "file:..",
+    "bedrock-mongodb": "^8.2.0",
+    "bedrock-server": "^2.7.0",
+    "bedrock-test": "^5.3.2",
+    "cross-env": "^7.0.3",
+    "nyc": "^15.1.0"
+  },
+  "nyc": {
+    "excludeNodeModules": false,
+    "include": [
+      "node_modules/bedrock-module-template-http/**"
+    ],
+    "exclude": [
+      "node_modules/bedrock-module-template-http/node_modules/**"
+    ]
+  }
+}
