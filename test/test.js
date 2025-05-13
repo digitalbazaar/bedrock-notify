@@ -8,14 +8,13 @@ import {
   barcodeToEnvelopedCredential,
   documentLoaders, middleware, verify
 } from '@bedrock/vcb-verifier';
+import {watcherMethods, watchers} from '@bedrock/notify';
 import {asyncHandler} from '@bedrock/express';
 import canonicalize from 'canonicalize';
 import cors from 'cors';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-// FIXME: implement
-//import {watch} from '@bedrock/notify';
 import '@bedrock/https-agent';
 import '@bedrock/express';
 
@@ -60,6 +59,30 @@ bedrock.events.on('bedrock.init', async () => {
       path.join(__dirname, '/contexts/utopia-v2.jsonld')]
   ]);
   await documentLoaders.create({name: 'test', documentMap});
+
+  // mock capability for communicating w/mock VC-API exchange server below
+  const {baseUri} = bedrock.config.server;
+  const target = `${baseUri}/workflows/1/exchanges`;
+  const capability = `urn:zcap:root:${encodeURIComponent(target)}`;
+
+  // register watchers
+  watchers.registerWatcher({
+    name: 'watchExchange',
+    fn: watcherMethods.createExchangeWatcher({
+      capability,
+      filterExchange({record, exchange}) {
+        if(record.watch.value?.state === exchange.state) {
+          // nothing new to update
+          return undefined;
+        }
+        // return only the information that should be accessible to the client
+        return {
+          state: exchange.state,
+          result: exchange.variables.results.verify.verifiablePresentation
+        };
+      }
+    })
+  });
 });
 
 bedrock.events.on('bedrock-express.configure.routes', app => {
@@ -82,28 +105,6 @@ bedrock.events.on('bedrock-express.configure.routes', app => {
           // use preferred `barcodeToEnvelopedCredential` method
           barcodeToCredential: barcodeToEnvelopedCredential,
           async verifyCredential({credential}) {
-            return verify({credential, capability});
-          }
-        };
-      }
-    }));
-
-  // legacy verify a VCB
-  const legacyVerifyVcbRoute = '/features/legacy-verify-vcb';
-  app.options(legacyVerifyVcbRoute, cors());
-  app.post(
-    legacyVerifyVcbRoute,
-    cors(),
-    middleware.createVerifyVcb({
-      getVerifyOptions() {
-        return {
-          documentLoader,
-          async verifyCredential({credential}) {
-            const credentialType = credential.type.at(-1);
-            // optical barcode credential Type
-            if(credentialType !== 'OpticalBarcodeCredential') {
-              throw new Error(`Unknown credential type "${credentialType}".`);
-            }
             return verify({credential, capability});
           }
         };

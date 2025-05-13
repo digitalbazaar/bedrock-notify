@@ -19,6 +19,7 @@
     "@bedrock/express": "^8.3.1",
     "@bedrock/https-agent": "^4.1.0",
     "@bedrock/jsonld-document-loader": "^5.2.0",
+    "@bedrock/mongodb": "^11.0.0",
     "@bedrock/notify": "file:..",
     "@bedrock/security-context": "^9.0.0",
     "@bedrock/server": "^5.1.0",
