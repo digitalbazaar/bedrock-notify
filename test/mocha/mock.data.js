@@ -31,3 +31,12 @@ mockData.verifiableCredential = {
 /* eslint-disable */
 mockData.vcbText = 'VC1-RSJRPWCR803A3P0098G3A3-B02-J743853U53KGK0XJ6MKJ1OI0M.FO053.33963DN04$RAQS+4SMC8C3KM7VX4VAPL9%EILI:I1O$D:23%GJ0OUCPS0H8D2FB9D5G00U39.PXG49%SOGGB*K$Z6%GUSCLWEJ8%B95MOD0P NG-I:V8N63K53';
 /* eslint-enable */
+
+/* eslint-disable */
+mockData.envelopeVerifiableCredential = {
+  "@context": ["https://www.w3.org/ns/credentials/v2"],
+  "type": 'EnvelopedVerifiableCredential',
+  "id": `data:application/vcb;barcode-format=qr_code;base64,` +
+    Buffer.from(mockData.vcbText, 'utf8').toString('base64')
+};
+/* eslint-enable */
