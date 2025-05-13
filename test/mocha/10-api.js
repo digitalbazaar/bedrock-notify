@@ -77,6 +77,7 @@ describe('watch API', () => {
     // check watch record
     should.exist(record.watch);
     const {watch} = record;
+    watch.mutable.should.equal(false);
     should.exist(watch.value);
     const {value} = watch;
     value.state.should.equal('complete');

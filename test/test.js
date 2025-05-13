@@ -73,12 +73,14 @@ bedrock.events.on('bedrock.init', async () => {
       filterExchange({record, exchange}) {
         if(record.watch.value?.state === exchange.state) {
           // nothing new to update
-          return undefined;
+          return;
         }
         // return only the information that should be accessible to the client
         return {
-          state: exchange.state,
-          result: exchange.variables.results.verify.verifiablePresentation
+          exchange: {
+            state: exchange.state,
+            result: exchange.variables.results.verify.verifiablePresentation
+          }
         };
       }
     })
