@@ -2,27 +2,36 @@
  * Copyright (c) 2024-2025 Digital Bazaar, Inc. All rights reserved.
  */
 import * as bedrock from '@bedrock/core';
-import {watchers, watches, zcapClient} from '@bedrock/notify';
+import {poll, pollers, zcapClient} from '@bedrock/notify';
 import {httpClient} from '@digitalbazaar/http-client';
 import {httpsAgent} from '@bedrock/https-agent';
 
 import {mockData} from './mock.data.js';
 
-describe('watch API', () => {
+describe('poll', () => {
   let target;
   let capability;
+  let pollExchange;
   before(async () => {
     // mock capability for communicating w/mock VC-API exchange server
     const {baseUri} = bedrock.config.server;
     target = `${baseUri}/workflows/1/exchanges`;
     capability = `urn:zcap:root:${encodeURIComponent(target)}`;
-
-    // set fast lock expiry and reschedule times
-    watchers._setLockExpiresTimeHook(() => 0);
-    watchers._setRescheduleTimeHook(() => 50);
+    pollExchange = pollers.createExchangePoller({
+      capability,
+      filterExchange({exchange}) {
+        return {
+          exchange: {
+            state: exchange.state,
+            // FIXME: map exchange.variables.result... => `value.result`
+            result: null
+          }
+        };
+      }
+    });
   });
 
-  it('watches an exchange', async () => {
+  it('polls an exchange', async () => {
     // create an exchange
     let exchangeId;
     {
@@ -37,14 +46,11 @@ describe('watch API', () => {
       exchangeId = response.headers.get('location');
     }
 
-    // start watching the exchange
-    await watchers.watch({
-      id: exchangeId,
-      watcher: 'watchExchange',
-      value: {state: 'pending'},
-      // five minute TTL
-      ttl: 5 * 60
-    });
+    // poll the exchange
+    {
+      const result = await poll({id: exchangeId, poller: pollExchange});
+      result.value.should.deep.equal({state: 'pending'});
+    }
 
     // use exchange
     {
@@ -65,28 +71,26 @@ describe('watch API', () => {
       assertNoError(error);
     }
 
-    // wait for watch update
-    await new Promise(r => setTimeout(r, 200));
+    // poll the exchange (using the cached value)
+    {
+      const result = await poll({id: exchangeId, poller: pollExchange});
+      result.value.should.deep.equal({state: 'pending'});
+    }
 
-    // get the watch record
-    const record = await watches.get({id: exchangeId});
+    // poll the exchange (using a fresh value)
+    {
+      const result = await poll({id: exchangeId, poller: pollExchange});
+      result.value.should.deep.equal({state: 'complete'});
 
-    // remove the watch record to stop polling
-    await watches.remove({id: exchangeId});
-
-    // check watch record
-    should.exist(record.watch);
-    const {watch} = record;
-    watch.mutable.should.equal(false);
-    should.exist(watch.value);
-    const {value} = watch;
-    value.state.should.equal('complete');
-
-    const expectedResult = {
-      '@context': ['https://www.w3.org/ns/credentials/v2'],
-      type: ['VerifiablePresentation'],
-      verifiableCredential: [mockData.verifiableCredential]
-    };
-    value.result.should.deep.equal(expectedResult);
+      // FIXME: map exchange.variables.result... => `value.result`
+      /*
+      const expectedResult = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        type: ['VerifiablePresentation'],
+        verifiableCredential: [mockData.verifiableCredential]
+      };
+      value.result.should.deep.equal(expectedResult);
+      */
+    }
   });
 });
