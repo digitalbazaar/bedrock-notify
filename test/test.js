@@ -8,7 +8,8 @@ import {
   barcodeToEnvelopedCredential,
   documentLoaders, middleware, verify
 } from '@bedrock/vcb-verifier';
-import {watcherMethods, watchers} from '@bedrock/notify';
+// FIXME: use below for push token callback route
+//import {poll, pollers} from '@bedrock/notify';
 import {asyncHandler} from '@bedrock/express';
 import canonicalize from 'canonicalize';
 import cors from 'cors';
@@ -60,31 +61,13 @@ bedrock.events.on('bedrock.init', async () => {
   ]);
   await documentLoaders.create({name: 'test', documentMap});
 
+  // FIXME: add example push token callback route
+  /*
   // mock capability for communicating w/mock VC-API exchange server below
   const {baseUri} = bedrock.config.server;
   const target = `${baseUri}/workflows/1/exchanges`;
   const capability = `urn:zcap:root:${encodeURIComponent(target)}`;
-
-  // register watchers
-  watchers.registerWatcher({
-    name: 'watchExchange',
-    fn: watcherMethods.createExchangeWatcher({
-      capability,
-      filterExchange({record, exchange}) {
-        if(record.watch.value?.state === exchange.state) {
-          // nothing new to update
-          return;
-        }
-        // return only the information that should be accessible to the client
-        return {
-          exchange: {
-            state: exchange.state,
-            result: exchange.variables.results.verify.verifiablePresentation
-          }
-        };
-      }
-    })
-  });
+  */
 });
 
 bedrock.events.on('bedrock-express.configure.routes', app => {

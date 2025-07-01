@@ -19,12 +19,16 @@ describe('poll', () => {
     capability = `urn:zcap:root:${encodeURIComponent(target)}`;
     pollExchange = pollers.createExchangePoller({
       capability,
-      filterExchange({exchange}) {
+      filterExchange({exchange, previousPollResult}) {
+        if(previousPollResult?.value?.state === exchange.state) {
+          // nothing new to update
+          return;
+        }
+        // return only the information that should be accessible to the client
         return {
           exchange: {
             state: exchange.state,
-            // FIXME: map exchange.variables.result... => `value.result`
-            result: null
+            result: exchange.variables.results?.verify?.verifiablePresentation
           }
         };
       }
@@ -49,7 +53,7 @@ describe('poll', () => {
     // poll the exchange
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.should.deep.equal({state: 'pending'});
+      result.value.should.deep.equal({state: 'pending', result: undefined});
     }
 
     // use exchange
@@ -74,23 +78,21 @@ describe('poll', () => {
     // poll the exchange (using the cached value)
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.should.deep.equal({state: 'pending'});
+      result.value.should.deep.equal({state: 'pending', result: undefined});
     }
 
     // poll the exchange (using a fresh value)
     {
-      const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.should.deep.equal({state: 'complete'});
-
-      // FIXME: map exchange.variables.result... => `value.result`
-      /*
+      const result = await poll({
+        id: exchangeId, poller: pollExchange, useCache: false
+      });
+      result.value.state.should.equal('complete');
       const expectedResult = {
         '@context': ['https://www.w3.org/ns/credentials/v2'],
         type: ['VerifiablePresentation'],
         verifiableCredential: [mockData.verifiableCredential]
       };
-      value.result.should.deep.equal(expectedResult);
-      */
+      result.value.result.should.deep.equal(expectedResult);
     }
   });
 });
