@@ -29,3 +29,9 @@ config.mongodb.port = 27017;
 config.mongodb.dropCollections = {};
 config.mongodb.dropCollections.onInit = true;
 config.mongodb.dropCollections.collections = [];
+
+// test hmac key for push token feature
+config.notify.push.hmacKey = {
+  id: 'urn:test:hmacKey',
+  secretKeyMultibase: 'uogHy02QDNPX4GID7dGUSGuYQ_Gv0WOIcpmTuKgt1ZNz7_4'
+};
