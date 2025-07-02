@@ -8,15 +8,15 @@ import {
   barcodeToEnvelopedCredential,
   documentLoaders, middleware, verify
 } from '@bedrock/vcb-verifier';
-// FIXME: use below for push token callback route
-//import {poll, pollers} from '@bedrock/notify';
+import {poll, pollers, push} from '@bedrock/notify';
 import {asyncHandler} from '@bedrock/express';
 import canonicalize from 'canonicalize';
 import cors from 'cors';
 import {fileURLToPath} from 'node:url';
+import {httpClient} from '@digitalbazaar/http-client';
+import {httpsAgent} from '@bedrock/https-agent';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-import '@bedrock/https-agent';
 import '@bedrock/express';
 
 const {util: {BedrockError}} = bedrock;
@@ -28,6 +28,8 @@ import {mockData} from './mocha/mock.data.js';
 const EXCHANGES = new Map();
 
 const TEXT_DECODER = new TextDecoder();
+
+let pollExchange;
 
 bedrock.events.on('bedrock.init', async () => {
   // setup mock VCB verifier app...
@@ -61,13 +63,26 @@ bedrock.events.on('bedrock.init', async () => {
   ]);
   await documentLoaders.create({name: 'test', documentMap});
 
-  // FIXME: add example push token callback route
-  /*
   // mock capability for communicating w/mock VC-API exchange server below
   const {baseUri} = bedrock.config.server;
   const target = `${baseUri}/workflows/1/exchanges`;
   const capability = `urn:zcap:root:${encodeURIComponent(target)}`;
-  */
+  pollExchange = pollers.createExchangePoller({
+    capability,
+    filterExchange({exchange, previousPollResult}) {
+      if(previousPollResult?.value?.state === exchange.state) {
+        // nothing new to update
+        return;
+      }
+      // return only the information that should be accessible to the client
+      return {
+        exchange: {
+          state: exchange.state,
+          result: exchange.variables.results?.verify?.verifiablePresentation
+        }
+      };
+    }
+  });
 });
 
 bedrock.events.on('bedrock-express.configure.routes', app => {
@@ -181,6 +196,19 @@ bedrock.events.on('bedrock-express.configure.routes', app => {
       // complete exchange
       exchange.state = 'complete';
 
+      // post updated event to callback
+      if(exchange.variables.callback) {
+        const {url} = exchange.variables.callback;
+        const workflowId = `${baseUri}/workflows/1`;
+        const exchangeId = `${workflowId}/exchanges/${exchange.id}`;
+        // note: real implementation should catch and log error, not throw it,
+        // it is simply thrown here to detect bugs during tests
+        await httpClient.post(url, {
+          agent: httpsAgent,
+          json: {exchangeId}
+        });
+      }
+
       // nothing to return, verification successful
       res.json({});
     }));
@@ -202,6 +230,16 @@ bedrock.events.on('bedrock-express.configure.routes', app => {
         id: `${target}/${localExchangeId}`
       };
       res.json({exchange});
+    }));
+
+  // push event handler
+  app.post(
+    '/callbacks/:pushToken',
+    push.createVerifyPushTokenMiddleware({event: 'exchangeUpdated'}),
+    asyncHandler(async (req, res) => {
+      const {exchangeId: id} = req.body;
+      await poll({id, poller: pollExchange, useCache: false});
+      res.sendStatus(204);
     }));
 });
 
