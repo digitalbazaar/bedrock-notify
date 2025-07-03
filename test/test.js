@@ -205,7 +205,11 @@ bedrock.events.on('bedrock-express.configure.routes', app => {
         // it is simply thrown here to detect bugs during tests
         await httpClient.post(url, {
           agent: httpsAgent,
-          json: {exchangeId}
+          json: {
+            event: {
+              data: {exchangeId}
+            }
+          }
         });
       }
 
@@ -237,7 +241,7 @@ bedrock.events.on('bedrock-express.configure.routes', app => {
     '/callbacks/:pushToken',
     push.createVerifyPushTokenMiddleware({event: 'exchangeUpdated'}),
     asyncHandler(async (req, res) => {
-      const {exchangeId: id} = req.body;
+      const {event: {data: {exchangeId: id}}} = req.body;
       await poll({id, poller: pollExchange, useCache: false});
       res.sendStatus(204);
     }));
