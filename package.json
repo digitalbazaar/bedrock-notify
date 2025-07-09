@@ -1,6 +1,6 @@
 {
   "name": "@bedrock/notify",
-  "version": "1.0.1-0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Bedrock notification management",
   "main": "./lib/index.js",
