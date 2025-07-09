@@ -66,7 +66,9 @@ describe('push', () => {
     // poll the exchange
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.should.deep.equal({state: 'pending', result: undefined});
+      result.value.should.deep.equal({
+        exchange: {state: 'pending', result: undefined}
+      });
     }
 
     // use exchange
@@ -92,13 +94,13 @@ describe('push', () => {
     // updated) because of the push callback
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.state.should.equal('complete');
+      result.value.exchange.state.should.equal('complete');
       const expectedResult = {
         '@context': ['https://www.w3.org/ns/credentials/v2'],
         type: ['VerifiablePresentation'],
         verifiableCredential: [mockData.verifiableCredential]
       };
-      result.value.result.should.deep.equal(expectedResult);
+      result.value.exchange.result.should.deep.equal(expectedResult);
     }
   });
 });

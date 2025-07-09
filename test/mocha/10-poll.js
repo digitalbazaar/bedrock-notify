@@ -53,7 +53,9 @@ describe('poll', () => {
     // poll the exchange
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.should.deep.equal({state: 'pending', result: undefined});
+      result.value.should.deep.equal({
+        exchange: {state: 'pending', result: undefined}
+      });
     }
 
     // use exchange
@@ -78,7 +80,9 @@ describe('poll', () => {
     // poll the exchange (using the cached value)
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
-      result.value.should.deep.equal({state: 'pending', result: undefined});
+      result.value.should.deep.equal({
+        exchange: {state: 'pending', result: undefined}
+      });
     }
 
     // poll the exchange (using a fresh value)
@@ -86,13 +90,13 @@ describe('poll', () => {
       const result = await poll({
         id: exchangeId, poller: pollExchange, useCache: false
       });
-      result.value.state.should.equal('complete');
+      result.value.exchange.state.should.equal('complete');
       const expectedResult = {
         '@context': ['https://www.w3.org/ns/credentials/v2'],
         type: ['VerifiablePresentation'],
         verifiableCredential: [mockData.verifiableCredential]
       };
-      result.value.result.should.deep.equal(expectedResult);
+      result.value.exchange.result.should.deep.equal(expectedResult);
     }
   });
 });
