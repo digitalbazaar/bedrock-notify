@@ -20,7 +20,7 @@ describe('poll', () => {
     pollExchange = pollers.createExchangePoller({
       capability,
       filterExchange({exchange, previousPollResult}) {
-        if(previousPollResult?.value?.state === exchange.state) {
+        if(previousPollResult?.value?.exchange?.state === exchange.state) {
           // nothing new to update
           return;
         }
@@ -53,6 +53,16 @@ describe('poll', () => {
     // poll the exchange
     {
       const result = await poll({id: exchangeId, poller: pollExchange});
+      result.value.should.deep.equal({
+        exchange: {state: 'pending', result: undefined}
+      });
+    }
+
+    // poll the exchange *again* (using a fresh value)
+    {
+      const result = await poll({
+        id: exchangeId, poller: pollExchange, useCache: false
+      });
       result.value.should.deep.equal({
         exchange: {state: 'pending', result: undefined}
       });

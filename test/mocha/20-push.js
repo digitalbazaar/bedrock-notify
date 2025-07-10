@@ -22,7 +22,7 @@ describe('push', () => {
     pollExchange = pollers.createExchangePoller({
       capability,
       filterExchange({exchange, previousPollResult}) {
-        if(previousPollResult?.value?.state === exchange.state) {
+        if(previousPollResult?.value?.exchange?.state === exchange.state) {
           // nothing new to update
           return;
         }
