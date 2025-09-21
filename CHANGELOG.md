@@ -1,5 +1,10 @@
 # bedrock-notify ChangeLog
 
+## 1.1.1 - 2025-mm-dd
+
+### Fixed
+- Fix peer dependencies.
+
 ## 1.1.0 - 2025-07-09
 
 ### Added

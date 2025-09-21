@@ -36,7 +36,7 @@
     "lru-cache": "^11.1.0"
   },
   "peerDependencies": {
-    "@bedrock/app-identity": "4.0.0",
+    "@bedrock/app-identity": "^4.0.0",
     "@bedrock/core": "^6.1.3",
     "@bedrock/express": "^8.3.1",
     "@bedrock/https-agent": "^4.1.0"
