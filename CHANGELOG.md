@@ -1,6 +1,6 @@
 # bedrock-notify ChangeLog
 
-## 1.1.1 - 2025-mm-dd
+## 1.1.1 - 2025-09-21
 
 ### Fixed
 - Fix peer dependencies.
