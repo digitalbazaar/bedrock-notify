@@ -57,6 +57,7 @@ const pollExchange = pollers.createExchangePoller({
           result: exchange.variables.results?.verify?.verifiablePresentation
         }
       };
-    }
-  });
+    };
+  }
+});
 ```
