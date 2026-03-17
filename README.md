@@ -54,9 +54,8 @@ const pollExchange = pollers.createExchangePoller({
     return {
       exchange: {
         state: exchange.state,
-          result: exchange.variables.results?.verify?.verifiablePresentation
-        }
-      };
+        result: exchange.variables.results?.verify?.verifiablePresentation
+      }
     };
   }
 });
